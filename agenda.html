@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda Pro</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--ink:#e7e9f0;--mute:#8a8fa3;--line:#2a2e3d;--acc:#6366f1;--acc2:#22d3ee;--todo:#f87171;--doing:#fbbf24;--done:#34d399;--shadow:0 10px 30px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px}
+h1{margin:0;font-size:26px;letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+.brand{background:linear-gradient(135deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{cursor:pointer;border:0;border-radius:10px;padding:9px 14px;background:var(--acc);color:#fff;font-weight:600;font-size:14px;transition:transform .12s,filter .12s,box-shadow .12s}
+button:hover{transform:translateY(-1px);filter:brightness(1.1);box-shadow:0 4px 12px rgba(99,102,241,.4)}
+button:active{transform:scale(.97)}
+button.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+button.danger{background:#ef4444}
+input,select,textarea{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink);font:inherit;outline:none;transition:border .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.tabs{display:flex;gap:6px;background:var(--card);padding:4px;border-radius:12px;border:1px solid var(--line);width:fit-content}
+.tab{background:transparent;color:var(--mute);padding:8px 16px;border-radius:8px;font-weight:600}
+.tab.active{background:var(--acc);color:#fff}
+.layout{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.panel h2{margin:0 0 12px;font-size:18px}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.nav h2{margin:0;font-size:18px;text-transform:capitalize}
+.dow,.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow div{text-align:center;font-size:11px;color:var(--mute);font-weight:700;text-transform:uppercase;padding:4px 0}
+.day{min-height:70px;border-radius:10px;border:1px solid transparent;background:rgba(255,255,255,.03);padding:6px;cursor:pointer;position:relative;transition:transform .12s,border .12s,background .12s;overflow:hidden}
+.day:hover{transform:scale(1.03);border-color:var(--acc);z-index:1}
+.day.out{opacity:.3}
+.day.today .n{background:var(--acc);color:#fff;border-radius:50%;padding:1px 7px}
+.day.sel{border-color:var(--acc);background:rgba(99,102,241,.15)}
+.n{font-size:12px;font-weight:700;display:inline-block}
+.dots{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.todo{background:var(--todo)}.dot.doing{background:var(--doing)}.dot.done{background:var(--done)}
+.more{font-size:10px;color:var(--mute)}
+form.add{display:grid;gap:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1;min-width:0}
+.task{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);margin-bottom:8px;border-left:4px solid var(--todo);transition:transform .15s,opacity .15s}
+.task:hover{transform:translateX(2px)}
+.task.doing{border-color:var(--doing)}.task.done{border-color:var(--done)}
+.task.done .t{text-decoration:line-through;opacity:.5}
+.body{flex:1;min-width:0}
+.t{font-weight:600;word-break:break-word}
+.meta{font-size:12px;color:var(--mute);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--mute)}
+.st{font-size:12px;padding:5px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--ink);cursor:pointer}
+.x{background:none;color:var(--mute);padding:4px 8px;font-size:16px}
+.empty{text-align:center;color:var(--mute);padding:30px 8px}
+.searchbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.searchbar input{flex:1;min-width:160px}
+.filterrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filter{background:var(--card);color:var(--mute);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:600}
+.filter.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.stat .n{font-size:22px;font-weight:700}
+.stat .l{font-size:11px;color:var(--mute);text-transform:uppercase}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--line);padding:12px 16px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:translateY(0)}
+.themebtn{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1><span></span><span class="brand">Agenda Pro</span></h1>
+  <div class="controls">
+    <button class="themebtn" id="theme">🌙</button>
+    <input id="me" placeholder="Seu nome" maxlength="20" style="width:130px">
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-view="calendar">Calendário</button>
+  <button class="tab" data-view="tasks">Tarefas</button>
+  <button class="tab" data-view="today">Hoje</button>
+</div>
+
+<div class="layout" id="calendarView">
+  <section class="panel">
+    <div class="nav">
+      <button class="ghost" id="prev">◀</button>
+      <h2 id="mtitle"></h2>
+      <button class="ghost" id="next">▶</button>
+    </div>
+    <div class="dow"><div>dom</div><div>seg</div><div>ter</div><div>qua</div><div>qui</div><div>sex</div><div>sáb</div></div>
+    <div class="days" id="days"></div>
+  </section>
+  <section class="panel">
+    <h2 id="dtitle"></h2>
+    <div class="stats">
+      <div class="stat"><div class="n" id="stTodo">0</div><div class="l">A fazer</div></div>
+      <div class="stat"><div class="n" id="stDoing">0</div><div class="l">Fazendo</div></div>
+      <div class="stat"><div class="n" id="stDone">0</div><div class="l">Feito</div></div>
+    </div>
+    <form class="add" id="f">
+      <div class="row"><input type="text" id="title" placeholder="Nova tarefa…" maxlength="120" required></div>
+      <div class="row">
+        <input type="text" id="who2" placeholder="Responsável" maxlength="20">
+        <input type="date" id="date" required>
+      </div>
+      <div class="row">
+        <input type="time" id="time">
+        <select id="quick">
+          <option value="">Agendamento rápido</option>
+          <option value="15">Daqui a 15 min</option>
+          <option value="60">Daqui a 1 hora</option>
+          <option value="today">Hoje</option>
+          <option value="tomorrow">Amanhã</option>
+          <option value="week">Esta semana</option>
+          <option value="month">Este mês</option>
+        </select>
+        <button type="submit">Adicionar</button>
+      </div>
+    </form>
+    <div id="list"></div>
+  </section>
+</div>
+
+<div class="layout" id="tasksView" hidden>
+  <section class="panel" style="grid-column:1/-1">
+    <div class="searchbar">
+      <input id="search" placeholder="Buscar tarefas…">
+      <select id="sort">
+        <option value="date">Ordenar por data</option>
+        <option value="status">Ordenar por status</option>
+        <option value="title">Ordenar por título</option>
+      </select>
+    </div>
+    <div class="filterrow">
+      <button class="filter active" data-f="all">Todas</button>
+      <button class="filter" data-f="todo">A fazer</button>
+      <button class="filter" data-f="doing">Fazendo</button>
+      <button class="filter" data-f="done">Feito</button>
+    </div>
+    <div id="allList"></div>
+  </section>
+</div>
+
+<div class="layout" id="todayView" hidden>
+  <section class="panel" style="grid-column:1/-1">
+    <h2>Hoje</h2>
+    <div id="todayList"></div>
+  </section>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const NEXT={todo:'doing',doing:'done',done:'todo'};
+const LABEL={todo:'A fazer',doing:'Fazendo',done:'Feito'};
+const PRIO={todo:'var(--todo)',doing:'var(--doing)',done:'var(--done)'};
+
+let tasks=[],view=new Date(),sel=key(new Date()),filter='all',search='',sort='date',theme='dark';
+view.setDate(1);
+try{tasks=JSON.parse(localStorage.getItem('agenda_tasks')||'[]')}catch(e){tasks=[]}
+try{theme=localStorage.getItem('agenda_theme')||'dark'}catch(e){}
+applyTheme(theme);
+try{$('me').value=localStorage.getItem('agenda_me')||''}catch(e){}
+$('me').addEventListener('input',()=>{try{localStorage.setItem('agenda_me',$('me').value)}catch(e){}});
+
+function save(){try{localStorage.setItem('agenda_tasks',JSON.stringify(tasks))}catch(e){}}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+function applyTheme(t){theme=t;document.documentElement.setAttribute('data-theme',t);$('theme').textContent=t==='dark'?'☀️':'🌙';try{localStorage.setItem('agenda_theme',t)}catch(e){}}
+
+$('theme').onclick=()=>applyTheme(theme==='dark'?'light':'dark');
+
+function uid(){return 't'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+function addTask(data){
+  tasks.push({id:uid(),status:'todo',created:Date.now(),...data});
+  save();renderAll();toast('Tarefa adicionada');
+}
+
+function updateTask(id,patch){tasks=tasks.map(t=>t.id===id?{...t,...patch}:t);save();renderAll()}
+function removeTask(id){if(!confirm('Apagar essa tarefa?'))return;tasks=tasks.filter(t=>t.id!==id);save();renderAll();toast('Removida')}
+
+// quick schedule
+$('quick').addEventListener('change',e=>{
+  const v=e.target.value;if(!v)return;
+  const now=new Date();
+  if(v==='15'){now.setMinutes(now.getMinutes()+15)}
+  else if(v==='60'){now.setHours(now.getHours()+1)}
+  else if(v==='today'){}
+  else if(v==='tomorrow'){now.setDate(now.getDate()+1)}
+  else if(v==='week'){now.setDate(now.getDate()+7)}
+  else if(v==='month'){now.setMonth(now.getMonth()+1)}
+  $('date').value=key(now);
+  if(v!=='today'&&v!=='tomorrow'&&v!=='week'&&v!=='month') $('time').value=pad(now.getHours())+':'+pad(now.getMinutes());
+  e.target.value='';
+});
+
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const v=b.dataset.view;
+  $('calendarView').hidden=v!=='calendar';
+  $('tasksView').hidden=v!=='tasks';
+  $('todayView').hidden=v!=='today';
+  renderAll();
+}));
+
+function renderCalendar(){
+  const y=view.getFullYear(),m=view.getMonth();
+  $('mtitle').textContent=view.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const first=new Date(y,m,1),start=new Date(y,m,1-first.getDay());
+  const box=$('days');box.innerHTML='';
+  const today=key(new Date());
+  for(let i=0;i<42;i++){
+    const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),k=key(d);
+    const el=document.createElement('div');
+    el.className='day'+(d.getMonth()!==m?' out':'')+(k===today?' today':'')+(k===sel?' sel':'');
+    const n=document.createElement('span');n.className='n';n.textContent=d.getDate();el.appendChild(n);
+    const ts=tasks.filter(t=>t.date===k);
+    if(ts.length){
+      const dots=document.createElement('div');dots.className='dots';
+      ts.slice(0,6).forEach(t=>{const o=document.createElement('div');o.className='dot '+t.status;dots.appendChild(o)});
+      if(ts.length>6){const mo=document.createElement('span');mo.className='more';mo.textContent='+'+(ts.length-6);dots.appendChild(mo)}
+      el.appendChild(dots);
+    }
+    el.onclick=()=>{sel=k;if(d.getMonth()!==m){view=new Date(d.getFullYear(),d.getMonth(),1)}renderAll()};
+    box.appendChild(el);
+  }
+  const [sy,sm,sd]=sel.split('-').map(Number);
+  $('dtitle').textContent=new Date(sy,sm-1,sd).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  const dayTasks=tasks.filter(t=>t.date===sel).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const list=$('list');list.innerHTML='';
+  if(!dayTasks.length){list.innerHTML='<div class="empty">Dia livre. Adicione uma tarefa acima.</div>';return}
+  dayTasks.forEach(t=>list.appendChild(taskCard(t)));
+  updateStats(dayTasks);
+}
+
+function updateStats(ts){
+  $('stTodo').textContent=ts.filter(t=>t.status==='todo').length;
+  $('stDoing').textContent=ts.filter(t=>t.status==='doing').length;
+  $('stDone').textContent=ts.filter(t=>t.status==='done').length;
+}
+
+function taskCard(t){
+  const row=document.createElement('div');row.className='task '+t.status;
+  const b=document.createElement('div');b.className='body';
+  const tt=document.createElement('div');tt.className='t';tt.textContent=t.title;
+  const mt=document.createElement('div');mt.className='meta';
+  if(t.who) mt.innerHTML+='<span>👤 '+escape(t.who)+'</span>';
+  if(t.date) mt.innerHTML+='<span>📅 '+t.date+'</span>';
+  if(t.time) mt.innerHTML+='<span>🕐 '+t.time+'</span>';
+  b.append(tt,mt);
+  const st=document.createElement('button');st.className='st';st.textContent=LABEL[t.status];
+  st.onclick=()=>updateTask(t.id,{status:NEXT[t.status]});
+  const x=document.createElement('button');x.className='x';x.textContent='✕';
+  x.onclick=()=>removeTask(t.id);
+  row.append(b,st,x);return row;
+}
+function escape(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+function renderTasks(){
+  const list=$('allList');list.innerHTML='';
+  let ts=[...tasks];
+  if(filter!=='all') ts=ts.filter(t=>t.status===filter);
+  if(search) ts=ts.filter(t=>(t.title+' '+(t.who||'')).toLowerCase().includes(search.toLowerCase()));
+  if(sort==='date') ts.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
+  else if(sort==='status') ts.sort((a,b)=>a.status.localeCompare(b.status));
+  else ts.sort((a,b)=>a.title.localeCompare(b.title));
+  if(!ts.length){list.innerHTML='<div class="empty">Nenhuma tarefa encontrada.</div>';return}
+  ts.forEach(t=>list.appendChild(taskCard(t)));
+}
+
+function renderToday(){
+  const t=key(new Date());
+  const ts=tasks.filter(x=>x.date===t).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const list=$('todayList');list.innerHTML='';
+  if(!ts.length){list.innerHTML='<div class="empty">Nada para hoje. 🌱</div>';return}
+  ts.forEach(x=>list.appendChild(taskCard(x)));
+}
+
+function renderAll(){renderCalendar();renderTasks();renderToday()}
+
+$('f').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const title=$('title').value.trim();if(!title)return;
+  const who=$('who2').value.trim()||$('me').value.trim();
+  const date=$('date').value||sel;
+  const time=$('time').value;
+  addTask({title,who,date,time});
+  $('title').value='';$('time').value='';
+});
+
+$('prev').onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderAll()};
+$('next').onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderAll()};
+$('search').addEventListener('input',e=>{search=e.target.value;renderTasks()});
+$('sort').addEventListener('change',e=>{sort=e.target.value;renderTasks()});
+document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');filter=b.dataset.f;renderTasks();
+}));
+
+// init date
+$('date').value=sel;
+renderAll();
+</script>
+</body>
+</html>
