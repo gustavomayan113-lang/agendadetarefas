@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-let tasks=[], theme='dark', filter='all';
+let tasks=[], theme='dark';
 try{tasks=JSON.parse(localStorage.getItem('licit_tasks')||'[]')}catch(e){tasks=[]}
 try{theme=localStorage.getItem('licit_theme')||'dark'}catch(e){}
 document.documentElement.setAttribute('data-theme',theme);
@@ -21,26 +21,42 @@ $('f').addEventListener('submit',e=>{
 });
 function setStatus(id,status){const t=tasks.find(x=>x.id===id);if(t){t.status=status;save();render()}}
 function removeTask(id){if(!confirm('Apagar?'))return;tasks=tasks.filter(t=>t.id!==id);save();render()}
-document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');filter=b.dataset.f;render();
-}));
-function render(){
-  const list=$('list'); list.innerHTML='';
-  let ts=[...tasks];
-  if(filter!=='all') ts=ts.filter(t=>t.status===filter);
-  ts.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
-  if(!ts.length){list.innerHTML='<div class="empty">Nenhuma tarefa.</div>';return}
-  ts.forEach(t=>{
-    const row=document.createElement('div'); row.className='task '+t.status;
-    row.innerHTML=`<div class="body"><div class="t">${t.title}</div><div class="meta"><span>📅 ${t.date} ${t.time||''}</span><span>👤 ${t.who||'—'}</span></div></div>
-      <button class="st" onclick="setStatus('${t.id}','todo')">A fazer</button>
-      <button class="st" onclick="setStatus('${t.id}','doing')">Em andamento</button>
-      <button class="st" onclick="setStatus('${t.id}','done')">Concluída</button>
-      <button class="x" onclick="removeTask('${t.id}')">✕</button>`;
-    list.appendChild(row);
-  });
+function card(t){
+  const div=document.createElement('div'); div.className='card'; div.draggable=true; div.dataset.id=t.id;
+  div.innerHTML=`<div class="ctitle">${t.title}</div>
+    <div class="cmeta">📅 ${t.date} ${t.time||''}</div>
+    <div class="cmeta">👤 ${t.who||'—'}</div>
+    <div class="btns">
+      <button onclick="setStatus('${t.id}','todo')">A fazer</button>
+      <button onclick="setStatus('${t.id}','doing')">Andamento</button>
+      <button onclick="setStatus('${t.id}','done')">Concluída</button>
+      <button onclick="setStatus('${t.id}','cancelada')">Cancelada</button>
+      <button onclick="setStatus('${t.id}','perdida')">Perdida</button>
+    </div>
+    <button class="x" onclick="removeTask('${t.id}')">✕</button>`;
+  div.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',t.id)});
+  return div;
 }
+function render(){
+  ['todo','doing','done','cancelada','perdida'].forEach(s=>{
+    const col=document.getElementById('col'+s.charAt(0).toUpperCase()+s.slice(1));
+    col.innerHTML='';
+    tasks.filter(t=>t.status===s).forEach(t=>col.appendChild(card(t)));
+  });
+  $('cTodo').textContent=tasks.filter(t=>t.status==='todo').length;
+  $('cDoing').textContent=tasks.filter(t=>t.status==='doing').length;
+  $('cDone').textContent=tasks.filter(t=>t.status==='done').length;
+  $('cCancelada').textContent=tasks.filter(t=>t.status==='cancelada').length;
+  $('cPerdida').textContent=tasks.filter(t=>t.status==='perdida').length;
+}
+document.querySelectorAll('.cards').forEach(col=>{
+  col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('over')});
+  col.addEventListener('dragleave',()=>col.classList.remove('over'));
+  col.addEventListener('drop',e=>{
+    e.preventDefault();col.classList.remove('over');
+    const id=e.dataTransfer.getData('text/plain');
+    const t=tasks.find(x=>x.id===id);
+    if(t){t.status=col.parentElement.dataset.status;save();render()}
+  });
+});
 render();
-EOF
-echo done
