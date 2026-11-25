@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-let licitacoes=[], tasks=[], theme='dark', filterTask='all', filterLic='all', searchLic='';
+let licitacoes=[], tasks=[], theme='dark';
 try{licitacoes=JSON.parse(localStorage.getItem('licit_lic')||'[]')}catch(e){licitacoes=[]}
 try{tasks=JSON.parse(localStorage.getItem('licit_tasks')||'[]')}catch(e){tasks=[]}
 try{theme=localStorage.getItem('licit_theme')||'dark'}catch(e){}
@@ -34,120 +34,59 @@ function fillSelects(){
   if(licitacoes.some(l=>l.id===cur)) tl.value=cur;
 }
 
-document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  const v=b.dataset.view;
-  ['dashboard','licitacoes','agenda','historico'].forEach(n=>$(n+'View').hidden=n!==v);
-  renderAll();
-}));
-
 $('fLic').addEventListener('submit',e=>{
   e.preventDefault();
   const l={id:uid(),title:$('lTitle').value.trim(),orgao:$('lOrgao').value.trim(),numero:$('lNumero').value.trim(),prazo:$('lPrazo').value,hora:$('lHora').value,reqs:{vistoria:$('cVistoria').checked,garantia:$('cGarantia').checked,composicao:$('cComposicao').checked,docs:$('cDocs').checked},exig:$('lExig').value.trim(),resp:$('lResp').value,status:'andamento',created:Date.now()};
-  licitacoes.push(l); save(); renderAll(); toast('Edital cadastrado');
-  e.target.reset();
+  licitacoes.push(l); save(); renderAll(); toast('Edital cadastrado'); e.target.reset();
 });
 
 $('fTask').addEventListener('submit',e=>{
   e.preventDefault();
-  const t={id:uid(),title:$('tTitle').value.trim(),lic:$('tLic').value,date:$('tDate').value,time:$('tTime').value,resp:$('tResp').value,status:'aberta',created:Date.now()};
-  tasks.push(t); save(); renderAll(); toast('Tarefa adicionada');
-  e.target.reset();
+  const t={id:uid(),title:$('tTitle').value.trim(),lic:$('tLic').value,date:$('tDate').value,time:$('tTime').value,resp:$('tResp').value,status:'todo',created:Date.now()};
+  tasks.push(t); save(); renderAll(); toast('Tarefa adicionada'); e.target.reset();
 });
 
-function setStatus(id,status){const l=licitacoes.find(x=>x.id===id);if(l){l.status=status;save();renderAll();toast('Status atualizado')}}
-function removeLic(id){if(!confirm('Apagar edital?'))return;licitacoes=licitacoes.filter(x=>x.id!==id);tasks=tasks.filter(t=>t.lic!==id);save();renderAll();toast('Removido')}
-function toggleTask(id){const t=tasks.find(x=>x.id===id);if(t){t.status=t.status==='feita'?'aberta':'feita';save();renderAll()}}
+function removeTask(id){if(!confirm('Apagar?'))return;tasks=tasks.filter(t=>t.id!==id);save();renderAll()}
+function removeLic(id){if(!confirm('Apagar edital?'))return;licitacoes=licitacoes.filter(x=>x.id!==id);tasks=tasks.filter(t=>t.lic!==id);save();renderAll()}
 
-function renderDashboard(){
-  $('stTotal').textContent=licitacoes.length;
-  $('stAndamento').textContent=licitacoes.filter(l=>l.status==='andamento').length;
-  $('stGanhas').textContent=licitacoes.filter(l=>l.status==='ganha').length;
-  $('stPerdidas').textContent=licitacoes.filter(l=>l.status==='perdida').length;
-  $('stNao').textContent=licitacoes.filter(l=>l.status==='nao').length;
-  $('stTarefas').textContent=tasks.filter(t=>t.status==='aberta').length;
-  const alerts=$('alerts'); alerts.innerHTML='';
-  const now=new Date();
-  const soon=licitacoes.filter(l=>l.status==='andamento').map(l=>({...l,days:Math.ceil((new Date(l.prazo+'T'+(l.hora||'00:00'))-now)/86400000)})).filter(l=>l.days<=7).sort((a,b)=>a.days-b.days);
-  soon.forEach(l=>{
-    const d=document.createElement('div'); d.className='task'; d.style.borderLeftColor=l.days<0?'var(--todo)':'var(--doing)';
-    d.innerHTML=`<div class="body"><div class="t">${l.title}</div><div class="meta"><span>⏰ ${l.days<0?'Atrasado':l.days+' dia(s) restante(s)'}</span><span>📅 ${l.prazo} ${l.hora||''}</span></div></div>`;
-    alerts.appendChild(d);
-  });
-  if(!soon.length) alerts.innerHTML='<div class="empty">Nenhum alerta próximo.</div>';
+function card(t){
+  const lic=licitacoes.find(l=>l.id===t.lic);
+  const div=document.createElement('div'); div.className='card'; div.draggable=true; div.dataset.id=t.id;
+  div.innerHTML=`<div class="ctitle">${t.title}</div>
+    <div class="cmeta">📅 ${t.date} ${t.time||''}</div>
+    <div class="cmeta">👤 ${t.resp||'—'}</div>
+    ${lic?`<div class="cmeta">📋 ${lic.title}</div>`:''}
+    <button class="x" onclick="removeTask('${t.id}')">✕</button>`;
+  div.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',t.id)});
+  return div;
 }
 
-function renderLicitacoes(){
-  const list=$('licList'); list.innerHTML='';
-  let ls=[...licitacoes];
-  if(filterLic!=='all') ls=ls.filter(l=>l.status===filterLic);
-  if(searchLic) ls=ls.filter(l=>(l.title+' '+l.orgao+' '+l.numero).toLowerCase().includes(searchLic.toLowerCase()));
-  ls.sort((a,b)=>(a.prazo||'').localeCompare(b.prazo||''));
-  if(!ls.length){list.innerHTML='<div class="empty">Nenhum edital.</div>';return}
-  ls.forEach(l=>{
-    const row=document.createElement('div'); row.className='task';
-    const reqs=Object.entries(l.reqs).filter(([,v])=>v).map(([k])=>k).join(', ')||'—';
-    row.innerHTML=`<div class="body">
-      <div class="t">${l.title}</div>
-      <div class="meta"><span>🏛 ${l.orgao||'—'}</span><span>#${l.numero||'—'}</span><span>📅 ${l.prazo} ${l.hora||''}</span><span>👤 ${l.resp||'—'}</span><span>📌 ${reqs}</span></div>
-      ${l.exig?`<div class="meta" style="margin-top:4px">${l.exig}</div>`:''}
-    </div>
-    <select class="st" onchange="setStatus('${l.id}',this.value)">
-      <option value="andamento" ${l.status==='andamento'?'selected':''}>Em andamento</option>
-      <option value="ganha" ${l.status==='ganha'?'selected':''}>Ganha</option>
-      <option value="perdida" ${l.status==='perdida'?'selected':''}>Perdida</option>
-      <option value="nao" ${l.status==='nao'?'selected':''}>Não participou</option>
-    </select>
-    <button class="x" onclick="removeLic('${l.id}')">✕</button>`;
-    list.appendChild(row);
+function renderAll(){
+  fillSelects();
+  ['todo','doing','done'].forEach(s=>{
+    const col=document.getElementById('col'+s.charAt(0).toUpperCase()+s.slice(1));
+    col.innerHTML='';
+    tasks.filter(t=>t.status===s).forEach(t=>col.appendChild(card(t)));
   });
+  $('cTodo').textContent=tasks.filter(t=>t.status==='todo').length;
+  $('cDoing').textContent=tasks.filter(t=>t.status==='doing').length;
+  $('cDone').textContent=tasks.filter(t=>t.status==='done').length;
 }
 
-function renderAgenda(){
-  const list=$('taskList'); list.innerHTML='';
-  let ts=[...tasks];
-  if(filterTask==='aberta') ts=ts.filter(t=>t.status==='aberta');
-  if(filterTask==='feita') ts=ts.filter(t=>t.status==='feita');
-  ts.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
-  if(!ts.length){list.innerHTML='<div class="empty">Nenhuma tarefa.</div>';return}
-  ts.forEach(t=>{
-    const lic=licitacoes.find(l=>l.id===t.lic);
-    const row=document.createElement('div'); row.className='task '+(t.status==='feita'?'done':'todo');
-    row.innerHTML=`<div class="body">
-      <div class="t">${t.title}</div>
-      <div class="meta"><span>📅 ${t.date} ${t.time||''}</span><span>👤 ${t.resp||'—'}</span>${lic?`<span>📋 ${lic.title}</span>`:''}</div>
-    </div>
-    <button class="st" onclick="toggleTask('${t.id}')">${t.status==='feita'?'Feita ✓':'Abrir'}</button>`;
-    list.appendChild(row);
+document.querySelectorAll('.cards').forEach(col=>{
+  col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('over')});
+  col.addEventListener('dragleave',()=>col.classList.remove('over'));
+  col.addEventListener('drop',e=>{
+    e.preventDefault();col.classList.remove('over');
+    const id=e.dataTransfer.getData('text/plain');
+    const t=tasks.find(x=>x.id===id);
+    if(t){t.status=col.parentElement.dataset.status;save();renderAll()}
   });
-}
-
-function renderHistorico(){
-  const list=$('histList'); list.innerHTML='';
-  const done=licitacoes.filter(l=>l.status!=='andamento');
-  if(!done.length){list.innerHTML='<div class="empty">Sem histórico ainda.</div>';return}
-  done.forEach(l=>{
-    const row=document.createElement('div'); row.className='task';
-    const color=l.status==='ganha'?'var(--done)':l.status==='perdida'?'var(--todo)':'var(--mute)';
-    row.style.borderLeftColor=color;
-    row.innerHTML=`<div class="body"><div class="t">${l.title}</div><div class="meta"><span>🏛 ${l.orgao||'—'}</span><span>📅 ${l.prazo}</span><span>Resultado: <b>${l.status}</b></span></div></div>`;
-    list.appendChild(row);
-  });
-}
-
-function renderAll(){fillSelects();renderDashboard();renderLicitacoes();renderAgenda();renderHistorico()}
-
-$('searchLic').addEventListener('input',e=>{searchLic=e.target.value;renderLicitacoes()});
-$('filterStatus').addEventListener('change',e=>{filterLic=e.target.value;renderLicitacoes()});
-document.querySelectorAll('#agendaView .filter').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('#agendaView .filter').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');filterTask=b.dataset.f;renderAgenda();
-}));
+});
 
 $('export').onclick=()=>{
   const blob=new Blob([JSON.stringify({licitacoes,tasks},null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='licit_backup.json'; a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup.json'; a.click();
 };
 $('importBtn').onclick=()=>$('importFile').click();
 $('importFile').addEventListener('change',e=>{
