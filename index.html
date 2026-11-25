@@ -3,77 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gestão de Licitações</title>
+<title>Agenda de Licitações</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1><span>📋</span><span class="brand">Kanban de Licitações</span></h1>
+  <h1><span>📋</span><span class="brand">Agenda de Licitações</span></h1>
   <div class="controls">
     <button class="themebtn" id="theme">🌙</button>
     <input id="me" placeholder="Seu nome" maxlength="20" style="width:130px">
-    <button class="ghost" id="export">Exportar</button>
-    <button class="ghost" id="importBtn">Importar</button>
-    <input type="file" id="importFile" accept="application/json" hidden>
   </div>
 </header>
 
-<section class="panel" style="margin-bottom:16px">
-  <h2>Nova tarefa / licitação</h2>
-  <form class="add" id="fTask">
+<section class="panel">
+  <h2>Nova tarefa</h2>
+  <form class="add" id="f">
+    <div class="row"><input type="text" id="title" placeholder="Tarefa / licitação" required></div>
     <div class="row">
-      <input type="text" id="tTitle" placeholder="Tarefa ou licitação" required>
-      <select id="tLic"><option value="">Vincular edital (opcional)</option></select>
-    </div>
-    <div class="row">
-      <select id="tResp"><option value="">Responsável</option></select>
-      <input type="date" id="tDate" required>
-      <input type="time" id="tTime">
+      <input type="text" id="who2" placeholder="Responsável" maxlength="20">
+      <input type="date" id="date" required>
+      <input type="time" id="time">
       <button type="submit">Adicionar</button>
     </div>
   </form>
 </section>
 
-<section class="panel" style="margin-bottom:16px">
-  <h2>Cadastrar edital</h2>
-  <form class="add" id="fLic">
-    <div class="row">
-      <input type="text" id="lTitle" placeholder="Objeto/Edital" required>
-      <input type="text" id="lOrgao" placeholder="Órgão">
-      <input type="text" id="lNumero" placeholder="Número">
-    </div>
-    <div class="row">
-      <input type="date" id="lPrazo" required>
-      <input type="time" id="lHora">
-      <select id="lResp"><option value="">Responsável</option></select>
-      <button type="submit">Cadastrar</button>
-    </div>
-    <div class="row">
-      <label><input type="checkbox" id="cVistoria"> Vistoria</label>
-      <label><input type="checkbox" id="cGarantia"> Garantia</label>
-      <label><input type="checkbox" id="cComposicao"> Composições</label>
-      <label><input type="checkbox" id="cDocs"> Documentos</label>
-    </div>
-    <div class="row"><textarea id="lExig" placeholder="Exigências detalhadas" rows="2"></textarea></div>
-  </form>
+<section class="panel">
+  <h2>Tarefas</h2>
+  <div class="filterrow">
+    <button class="filter active" data-f="all">Todas</button>
+    <button class="filter" data-f="todo">A fazer</button>
+    <button class="filter" data-f="doing">Em andamento</button>
+    <button class="filter" data-f="done">Concluída</button>
+  </div>
+  <div id="list"></div>
 </section>
-
-<div class="kanban">
-  <div class="column" data-status="todo">
-    <div class="colhead">A fazer <span class="count" id="cTodo">0</span></div>
-    <div class="cards" id="colTodo"></div>
-  </div>
-  <div class="column" data-status="doing">
-    <div class="colhead">Fazendo <span class="count" id="cDoing">0</span></div>
-    <div class="cards" id="colDoing"></div>
-  </div>
-  <div class="column" data-status="done">
-    <div class="colhead">Concluído <span class="count" id="cDone">0</span></div>
-    <div class="cards" id="colDone"></div>
-  </div>
-</div>
-
 </div>
 <div class="toast" id="toast"></div>
 <script src="javascript.js"></script>
