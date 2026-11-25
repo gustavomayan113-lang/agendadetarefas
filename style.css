@@ -18,7 +18,7 @@ form.add{display:grid;gap:8px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row>*{flex:1;min-width:0}
 .row label{display:flex;align-items:center;gap:6px;flex:0 0 auto}
-.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 @media(max-width:900px){.kanban{grid-template-columns:1fr}}
 .column{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;min-height:300px}
 .colhead{font-weight:700;font-size:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
@@ -36,3 +36,5 @@ form.add{display:grid;gap:8px}
 .themebtn{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 EOF
 echo done
+.btns{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.btns button{padding:4px 8px;font-size:11px;border-radius:6px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
