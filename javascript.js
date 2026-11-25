@@ -2,17 +2,17 @@ const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 let licitacoes=[], tasks=[], theme='dark', filterTask='all', filterLic='all', searchLic='';
-try{licitacoes=JSON.parse(localStorage.getItem('compac_lic')||'[]')}catch(e){licitacoes=[]}
-try{tasks=JSON.parse(localStorage.getItem('compac_tasks')||'[]')}catch(e){tasks=[]}
-try{theme=localStorage.getItem('compac_theme')||'dark'}catch(e){}
+try{licitacoes=JSON.parse(localStorage.getItem('licit_lic')||'[]')}catch(e){licitacoes=[]}
+try{tasks=JSON.parse(localStorage.getItem('licit_tasks')||'[]')}catch(e){tasks=[]}
+try{theme=localStorage.getItem('licit_theme')||'dark'}catch(e){}
 document.documentElement.setAttribute('data-theme',theme);
 $('theme').textContent=theme==='dark'?'☀️':'🌙';
-try{$('me').value=localStorage.getItem('compac_me')||''}catch(e){}
-$('me').addEventListener('input',()=>{try{localStorage.setItem('compac_me',$('me').value)}catch(e){}});
+try{$('me').value=localStorage.getItem('licit_me')||''}catch(e){}
+$('me').addEventListener('input',()=>{try{localStorage.setItem('licit_me',$('me').value)}catch(e){}});
 
-function save(){try{localStorage.setItem('compac_lic',JSON.stringify(licitacoes));localStorage.setItem('compac_tasks',JSON.stringify(tasks))}catch(e){}}
+function save(){try{localStorage.setItem('licit_lic',JSON.stringify(licitacoes));localStorage.setItem('licit_tasks',JSON.stringify(tasks))}catch(e){}}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
-$('theme').onclick=()=>{theme=theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',theme);$('theme').textContent=theme==='dark'?'☀️':'🌙';try{localStorage.setItem('compac_theme',theme)}catch(e){}};
+$('theme').onclick=()=>{theme=theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',theme);$('theme').textContent=theme==='dark'?'☀️':'🌙';try{localStorage.setItem('licit_theme',theme)}catch(e){}};
 
 function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function people(){
@@ -147,7 +147,7 @@ document.querySelectorAll('#agendaView .filter').forEach(b=>b.addEventListener('
 
 $('export').onclick=()=>{
   const blob=new Blob([JSON.stringify({licitacoes,tasks},null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='compac_backup.json'; a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='licit_backup.json'; a.click();
 };
 $('importBtn').onclick=()=>$('importFile').click();
 $('importFile').addEventListener('change',e=>{
